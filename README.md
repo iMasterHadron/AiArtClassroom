@@ -44,9 +44,29 @@ echo "your_jimeng_session_id" > ~/.sk_config/jimeng_sessionid
 ```
 
 > **如何获取即梦 sessionid？**
-> 1. 部署即梦 MCP 服务（参考即梦官方文档）
-> 2. 或使用其他兼容的 AI 图片生成 API
-> 3. sessionid 从即梦 API 的 Authorization header 获取
+>
+> 本工具通过即梦 API 生成图片，需要先部署即梦 API 代理服务（MCP 服务），然后获取 sessionid 作为认证凭证。
+>
+> **方案一：部署即梦 MCP 服务（推荐）**
+> ```
+> 1. 使用官方即梦 MCP 部署脚本启动服务
+> 2. 服务启动后会在控制台输出 Bearer token（即 sessionid）
+> 3. 或者在请求头中查看：curl 即梦API地址 -H "Authorization: Bearer xxx"
+> ```
+>
+> **方案二：使用已有的即梦服务**
+> ```
+> 1. 如果已有即梦 MCP 服务在运行，sessionid 就是 HTTP 请求头中的 Bearer token
+> 2. 示例：curl -s 即梦API地址 \
+>       -H "Authorization: Bearer 你的sessionid" \
+>       -H "Content-Type: application/json"
+> ```
+>
+> **方案三：使用其他兼容的 AI 图片生成 API**
+> ```
+> 只要能提供兼容的 HTTP API（POST /v1/chat/completions），
+> 也可以接入其他图片生成服务，只需修改 JIMENG_URL 环境变量。
+> ```
 
 ### 3. 本地开发
 
