@@ -1,0 +1,40 @@
+# === Node ===
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# === Build output ===
+client/dist/
+server/dist/
+**/*.tsbuildinfo
+
+# === Data files (SQLite databases) ===
+data/
+*.db
+*.db-*
+*.db-shm
+*.db-wal
+
+# === Environment & secrets ===
+.env
+.env.local
+.env.*.local
+jimeng_sessionid
+**/jimeng_sessionid
+.sk_config/
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# === Uploads ===
+uploads/
+*.xlsx
+!client/src/**/*.xlsx
