@@ -5,7 +5,21 @@
 
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const { loadConfig, saveConfig } = require('./store');
+
+// 错误日志写入文件
+const LOG_PATH = path.join(app.getPath('home'), '.ai-art-classroom', 'app.log');
+function log(msg) {
+  try {
+    const dir = path.dirname(LOG_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.appendFileSync(LOG_PATH, `[${new Date().toISOString()}] ${msg}\n`);
+  } catch(e) {}
+}
+log('=== App started ===');
+log('__dirname: ' + __dirname);
+log('cwd: ' + process.cwd());
 
 let mainWindow = null;
 let server = null;
@@ -14,26 +28,47 @@ let server = null;
 const PORT = 3002;
 
 async function startServer() {
+  log('Starting server...');
   // 1. 先初始化数据库（sql.js 异步加载）
-  const { initDBAsync } = require(path.join(__dirname, '../server/dist/db.js'));
-  await initDBAsync();
+  try {
+    log('Loading db module...');
+    const { initDBAsync } = require(path.join(__dirname, '../server/dist/db.js'));
+    log('Calling initDBAsync...');
+    await initDBAsync();
+    log('DB initialized OK');
+  } catch (dbErr) {
+    log('DB init failed: ' + (dbErr.stack || dbErr.message));
+    throw dbErr;
+  }
 
   // 2. 启动 Express
-  const serverModule = require(path.join(__dirname, '../server/dist/index.js'));
-  const serverApp = serverModule.app;
+  log('Loading server module...');
+  let serverModule, serverApp;
+  try {
+    serverModule = require(path.join(__dirname, '../server/dist/index.js'));
+    log('Server module loaded, keys: ' + Object.keys(serverModule).join(', '));
+    serverApp = serverModule.app;
+    log('Express app obtained');
+  } catch (srvErr) {
+    log('Server module load failed: ' + (srvErr.stack || srvErr.message));
+    throw srvErr;
+  }
 
   return new Promise((resolve, reject) => {
     try {
       server = serverApp.listen(PORT, '127.0.0.1', () => {
+        log(`✅ Server started on port ${PORT}`);
         console.log(`✅ 后端服务已启动: http://127.0.0.1:${PORT}`);
         resolve();
       });
 
       server.on('error', (err) => {
+        log('Server listen error: ' + err.message);
         console.error('❌ 后端服务启动失败:', err.message);
         reject(err);
       });
     } catch (err) {
+      log('Server start catch: ' + (err.stack || err.message));
       console.error('❌ 导入后端模块失败:', err);
       reject(err);
     }

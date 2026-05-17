@@ -17,7 +17,26 @@ async function initDbInternal(): Promise<void> {
     fs.mkdirSync(dir, { recursive: true });
   }
 
-  SQL = await initSqlJs();
+  // sql.js 需要加载 WASM 文件
+  // 在不同环境下，node_modules 的路径不同
+  const sqlWasmPath = path.join(__dirname, '../../node_modules/sql.js/dist/sql-wasm.wasm');
+  if (fs.existsSync(sqlWasmPath)) {
+    console.log('Found sql-wasm.wasm at:', sqlWasmPath);
+  } else {
+    console.warn('sql-wasm.wasm not found at:', sqlWasmPath);
+    // 尝试备用路径
+    const altPath = path.join(__dirname, '../../../sql.js/dist/sql-wasm.wasm');
+    console.log('Trying alt path:', altPath);
+  }
+
+  SQL = await initSqlJs({
+    locateFile: (file: string) => {
+      const p = path.join(__dirname, '../../node_modules/sql.js/dist/', file);
+      if (fs.existsSync(p)) return p;
+      // fallback 到默认
+      return file;
+    }
+  });
 
   if (fs.existsSync(DB_PATH)) {
     const buffer = fs.readFileSync(DB_PATH);
