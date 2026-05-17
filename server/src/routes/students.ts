@@ -5,7 +5,8 @@ import path from 'path';
 import { queryAll, queryOne, execute } from '../db';
 
 const router = Router();
-const upload = multer({ dest: path.join(__dirname, '../../uploads/') });
+const UPLOAD_DIR = process.env.DATA_DIR ? path.join(process.env.DATA_DIR, 'uploads') : path.join(__dirname, '../../uploads');
+const upload = multer({ dest: UPLOAD_DIR });
 
 // POST /upload — 上传 Excel 导入学生名单
 router.post('/upload', upload.single('file'), (req: Request, res: Response) => {

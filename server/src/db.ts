@@ -6,7 +6,8 @@ import initSqlJs, { SqlJsStatic, Database as SqlJsDatabase } from 'sql.js';
 import fs from 'fs';
 import path from 'path';
 
-const DB_PATH = path.join(__dirname, '../../data/sk.db');
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '../../data');
+const DB_PATH = path.join(DATA_DIR, 'sk.db');
 
 let SQL: SqlJsStatic;
 let db: SqlJsDatabase;

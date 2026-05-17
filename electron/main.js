@@ -31,7 +31,12 @@ let server = null;
 const PORT = 3002;
 
 async function startServer() {
-  log('Starting server...');
+  // 设置数据目录为用户可写位置（DMG 是只读卷，不能写到 app bundle 里）
+  const userDataDir = path.join(app.getPath('home'), '.ai-art-classroom');
+  process.env.DATA_DIR = userDataDir;
+  log('DATA_DIR: ' + process.env.DATA_DIR);
+  log('userData: ' + app.getPath('userData'));
+
   // 1. 先初始化数据库（sql.js 异步加载）
   try {
     log('Loading db module...');
