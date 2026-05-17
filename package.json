@@ -9,13 +9,21 @@
     "build:server": "cd server && npm install && npx tsc",
     "build": "npm run build:client && npm run build:server",
     "electron:dev": "NODE_ENV=development ELECTRON_RUN=1 electron .",
-    "dist:mac": "npm run build && electron-builder --mac --config electron-builder.yml",
+    "dist:mac": "npm run build && npx electron-builder --mac --config electron-builder.yml",
     "dist:win": "npm run build && npx electron-builder --win --config electron-builder.yml",
     "dist:all": "npm run build && npx electron-builder --mac --win --config electron-builder.yml"
   },
   "devDependencies": {
+    "@electron/rebuild": "^3.6.0",
+    "concurrently": "^9.0.0",
     "electron": "^35.0.0",
-    "electron-builder": "^25.0.0",
-    "concurrently": "^9.0.0"
+    "electron-builder": "^25.0.0"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "multer": "^2.1.1",
+    "sql.js": "^1.14.1",
+    "xlsx": "^0.18.5"
   }
 }

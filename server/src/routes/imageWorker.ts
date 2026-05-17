@@ -1,7 +1,6 @@
 /**
  * imageWorker.js — 子进程：生成图片并写入数据库
- * 通过 fork() 从主 Express 进程启动，独立运行不受 Express 事件循环影响
- * 这样 SQLite 的写锁不会阻塞 HTTP 请求
+ * 通过 fork() 从主 Express 进程启动，独立运行
  */
 
 interface QueueItem {
@@ -13,8 +12,10 @@ interface QueueItem {
 }
 
 async function main() {
-  const { getDB } = await import('../db');
-  const { generateImage } = await import('../services/jimeng');
+  const { initDBAsync, queryOne, execute } = await import('../db');
+
+  // 初始化数据库
+  await initDBAsync();
 
   function generatePromptId() {
     return `prompt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -28,20 +29,20 @@ async function main() {
       return;
     }
 
-    const db = getDB();
-
     try {
+      const { generateImage } = await import('../services/jimeng');
+
       console.log(`🚀 [Worker] 开始生成: ${item.student_name} - ${item.prompt}`);
       const urls = await generateImage(item.prompt + '，高清画质，4K细节');
 
-      // ★★★ 只插入第一张图片，大幅减少数据量和传输量
       const promptId = generatePromptId();
       const firstUrl = urls[0];
 
       if (firstUrl) {
-        db.prepare(
-          'INSERT INTO images (student_id, student_name, group_id, prompt, prompt_id, image_url) VALUES (?, ?, ?, ?, ?, ?)'
-        ).run(item.student_id, item.student_name, item.group_id, item.prompt, promptId, firstUrl);
+        execute(
+          'INSERT INTO images (student_id, student_name, group_id, prompt, prompt_id, image_url) VALUES (?, ?, ?, ?, ?, ?)',
+          [item.student_id, item.student_name, item.group_id, item.prompt, promptId, firstUrl]
+        );
       }
 
       console.log(`✅ [Worker] 完成: ${item.student_name}，已保存第1张（共生成${urls.length}张）`);

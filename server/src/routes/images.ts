@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { getDB } from '../db';
+import { queryAll, queryOne, execute } from '../db';
 import { fork } from 'child_process';
 import path from 'path';
 
@@ -58,8 +58,7 @@ router.post('/images/generate', async (req: Request, res: Response) => {
       return;
     }
 
-    const db = getDB();
-    const student = db.prepare('SELECT * FROM students WHERE id = ?').get(student_id) as any;
+    const student = queryOne('SELECT * FROM students WHERE id = ?', [student_id]);
     if (!student) {
       res.status(404).json({ code: 1, message: '学生不存在' });
       return;
@@ -127,7 +126,6 @@ router.get('/images/queue', (_req: Request, res: Response) => {
 // GET /images — 获取所有图片（老师端/画廊）
 router.get('/images', (req: Request, res: Response) => {
   try {
-    const db = getDB();
     const { group_id, limit, student_id } = req.query;
 
     let sql = `
@@ -136,8 +134,8 @@ router.get('/images', (req: Request, res: Response) => {
       FROM images i
       JOIN groups g ON i.group_id = g.id
     `;
-    const params: any[] = [];
     const conditions: string[] = [];
+    const params: any[] = [];
 
     if (group_id) {
       conditions.push('i.group_id = ?');
@@ -159,7 +157,7 @@ router.get('/images', (req: Request, res: Response) => {
       params.push(Number(limit));
     }
 
-    const images = db.prepare(sql).all(...params);
+    const images = queryAll(sql, params);
     res.json({ code: 0, data: images });
   } catch (err: any) {
     res.status(500).json({ code: 1, message: err.message });
@@ -169,13 +167,12 @@ router.get('/images', (req: Request, res: Response) => {
 // GET /images/:student_id — 获取某个学生的所有图片
 router.get('/images/:student_id', (req: Request, res: Response) => {
   try {
-    const db = getDB();
-    const images = db.prepare(
+    const images = queryAll(
       `SELECT i.*, g.name as group_name FROM images i
        JOIN groups g ON i.group_id = g.id
-       WHERE i.student_id = ? ORDER BY i.created_at DESC`
-    ).all(req.params.student_id);
-
+       WHERE i.student_id = ? ORDER BY i.created_at DESC`,
+      [req.params.student_id]
+    );
     res.json({ code: 0, data: images });
   } catch (err: any) {
     res.status(500).json({ code: 1, message: err.message });
@@ -185,12 +182,10 @@ router.get('/images/:student_id', (req: Request, res: Response) => {
 // DELETE /images/:image_id — 删除单张图片（学生端）
 router.delete('/images/:image_id', (req: Request, res: Response) => {
   try {
-    const db = getDB();
     const imageId = parseInt(req.params.image_id);
     const { student_id } = req.query;
 
-    // 验证图片存在且属于该学生
-    const image = db.prepare('SELECT * FROM images WHERE id = ?').get(imageId) as any;
+    const image = queryOne('SELECT * FROM images WHERE id = ?', [imageId]);
     if (!image) {
       res.status(404).json({ code: 1, message: '图片不存在' });
       return;
@@ -201,7 +196,7 @@ router.delete('/images/:image_id', (req: Request, res: Response) => {
       return;
     }
 
-    db.prepare('DELETE FROM images WHERE id = ?').run(imageId);
+    execute('DELETE FROM images WHERE id = ?', [imageId]);
     res.json({ code: 0, message: '删除成功' });
   } catch (err: any) {
     res.status(500).json({ code: 1, message: err.message });
@@ -213,7 +208,6 @@ router.delete('/images/:image_id', (req: Request, res: Response) => {
 // POST /archives — 一键归档所有当前作品
 router.post('/archives', (req: Request, res: Response) => {
   try {
-    const db = getDB();
     const { name } = req.body;
 
     // 自动生成归档名称：日期+时间
@@ -225,26 +219,25 @@ router.post('/archives', (req: Request, res: Response) => {
       archiveName = `归档_${dateStr}_${timeStr}`;
     }
 
-    // 创建归档记录
     const nowStr = new Date().toISOString();
-    const archiveResult = db.prepare(
-      'INSERT INTO archives (name, archive_date) VALUES (?, ?)'
-    ).run(archiveName, nowStr);
+    const archiveResult = execute(
+      'INSERT INTO archives (name, archive_date) VALUES (?, ?)',
+      [archiveName, nowStr]
+    );
     const archiveId = archiveResult.lastInsertRowid;
 
     // 复制所有当前图片到归档
-    const images = db.prepare(
+    const images = queryAll(
       `SELECT i.*, g.name as group_name FROM images i
        JOIN groups g ON i.group_id = g.id
        ORDER BY i.created_at DESC`
-    ).all();
-
-    const insertArchived = db.prepare(
-      'INSERT INTO archived_images (archive_id, student_id, student_name, group_id, group_name, prompt, image_url, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
     );
 
-    for (const img of images as any[]) {
-      insertArchived.run(archiveId, img.student_id, img.student_name, img.group_id, img.group_name, img.prompt, img.image_url, img.created_at);
+    for (const img of images) {
+      execute(
+        'INSERT INTO archived_images (archive_id, student_id, student_name, group_id, group_name, prompt, image_url, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [archiveId, img.student_id, img.student_name, img.group_id, img.group_name, img.prompt, img.image_url, img.created_at]
+      );
     }
 
     res.json({
@@ -260,7 +253,6 @@ router.post('/archives', (req: Request, res: Response) => {
 // GET /archives — 获取归档列表
 router.get('/archives', (req: Request, res: Response) => {
   try {
-    const db = getDB();
     const { date } = req.query;
 
     let sql = 'SELECT * FROM archives WHERE 1=1';
@@ -273,7 +265,7 @@ router.get('/archives', (req: Request, res: Response) => {
 
     sql += ' ORDER BY created_at DESC';
 
-    const archives = db.prepare(sql).all(...params);
+    const archives = queryAll(sql, params);
     res.json({ code: 0, data: archives });
   } catch (err: any) {
     res.status(500).json({ code: 1, message: err.message });
@@ -283,18 +275,18 @@ router.get('/archives', (req: Request, res: Response) => {
 // GET /archives/:archiveId — 获取某归档的详情
 router.get('/archives/:archiveId', (req: Request, res: Response) => {
   try {
-    const db = getDB();
     const archiveId = parseInt(req.params.archiveId);
 
-    const archive = db.prepare('SELECT * FROM archives WHERE id = ?').get(archiveId);
+    const archive = queryOne('SELECT * FROM archives WHERE id = ?', [archiveId]);
     if (!archive) {
       res.status(404).json({ code: 1, message: '归档不存在' });
       return;
     }
 
-    const images = db.prepare(
-      'SELECT * FROM archived_images WHERE archive_id = ? ORDER BY created_at DESC'
-    ).all(archiveId);
+    const images = queryAll(
+      'SELECT * FROM archived_images WHERE archive_id = ? ORDER BY created_at DESC',
+      [archiveId]
+    );
 
     res.json({ code: 0, data: { archive, images } });
   } catch (err: any) {

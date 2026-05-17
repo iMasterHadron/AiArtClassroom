@@ -13,17 +13,22 @@ let server = null;
 // 后端端口
 const PORT = 3002;
 
-function startServer() {
+async function startServer() {
+  // 1. 先初始化数据库（sql.js 异步加载）
+  const { initDBAsync } = require(path.join(__dirname, '../server/dist/db.js'));
+  await initDBAsync();
+
+  // 2. 启动 Express
+  const serverModule = require(path.join(__dirname, '../server/dist/index.js'));
+  const serverApp = serverModule.app;
+
   return new Promise((resolve, reject) => {
     try {
-      // 导入 Express 服务
-      const serverApp = require(path.join(__dirname, '../server/dist/index.js')).default;
-      
       server = serverApp.listen(PORT, '127.0.0.1', () => {
         console.log(`✅ 后端服务已启动: http://127.0.0.1:${PORT}`);
         resolve();
       });
-      
+
       server.on('error', (err) => {
         console.error('❌ 后端服务启动失败:', err.message);
         reject(err);

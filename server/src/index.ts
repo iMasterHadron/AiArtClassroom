@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
-import { initDB } from './db';
+import { initDBAsync } from './db';
 import { studentsRouter } from './routes/students';
 import { imagesRouter } from './routes/images';
 import { configRouter } from './routes/config';
@@ -40,15 +40,15 @@ app.get('/sk/*', (_req, res) => {
   }
 });
 
-// 初始化数据库
-initDB();
+export { app, PORT, BASE };
 
-// 仅在非 Electron 环境下自动监听（Electron 主进程会手动调用）
+// 仅在非 Electron 环境下自动启动
 if (!process.env.ELECTRON_RUN) {
-  app.listen(PORT, () => {
-    console.log(`✏️ SK Server running at http://localhost:${PORT}`);
-    console.log(`📚 API base: http://localhost:${PORT}${BASE}`);
-  });
+  (async () => {
+    await initDBAsync();
+    app.listen(PORT, () => {
+      console.log(`✏️ SK Server running at http://localhost:${PORT}`);
+      console.log(`📚 API base: http://localhost:${PORT}${BASE}`);
+    });
+  })();
 }
-
-export default app;

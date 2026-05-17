@@ -5,7 +5,6 @@ directories:
 files:
   - electron/**/*
   - server/dist/**/*
-  - server/node_modules/**/*
   - server/package.json
   - client/dist/**/*
 extraMetadata:
@@ -25,3 +24,4 @@ nsis:
   createDesktopShortcut: true
   language: "2052"
 asar: false
+includeSubNodeModules: true
