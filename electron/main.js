@@ -44,9 +44,9 @@ function createWindow() {
     title: 'AI 绘画小课堂',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-    contextIsolation: true,
-    nodeIntegration: false,
-  });
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
   });
 
   // 加载前端页面
