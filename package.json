@@ -1,0 +1,21 @@
+{
+  "name": "ai-art-classroom",
+  "version": "1.0.0",
+  "description": "AI绘画小课堂 - 学校AI绘画工具",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "concurrently \"cd server && npm run dev\" \"cd client && npm run dev\"",
+    "build:client": "cd client && npm install && npx vite build",
+    "build:server": "cd server && npm install && npx tsc",
+    "build": "npm run build:client && npm run build:server",
+    "electron:dev": "NODE_ENV=development ELECTRON_RUN=1 electron .",
+    "dist:mac": "npm run build && electron-builder --mac --config electron-builder.yml",
+    "dist:win": "npm run build && npx electron-builder --win --config electron-builder.yml",
+    "dist:all": "npm run build && npx electron-builder --mac --win --config electron-builder.yml"
+  },
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^25.0.0",
+    "concurrently": "^9.0.0"
+  }
+}

@@ -22,6 +22,21 @@
 - Node.js 18+
 - npm
 
+### 方式一：桌面应用（推荐）
+
+下载对应系统的安装包，直接安装使用：
+
+| 平台 | 安装包 |
+|------|--------|
+| **macOS** (Apple Silicon) | `AI绘画小课堂-1.0.0-mac.dmg` |
+| **Windows** (64位) | `AI绘画小课堂-1.0.0-win.exe` |
+
+首次启动后，在 **设置** 页面配置即梦 sessionid（从浏览器 F12 获取）。
+
+> 下载地址：请从 [Releases](https://github.com/iMasterHadron/AiArtClassroom/releases) 页面获取最新版本。
+
+### 方式二：本地开发/Web 部署
+
 ### 1. 克隆项目
 
 ```bash
@@ -31,42 +46,27 @@ cd AiArtClassroom
 
 ### 2. 配置即梦 AI
 
-本项目使用即梦 AI 生成图片，需要配置 sessionid：
-
-```bash
-# 方式一：环境变量（推荐）
-export JIMENG_SESSIONID=your_jimeng_session_id
-export JIMENG_URL=http://localhost:8001/v1/chat/completions
-
-# 方式二：配置文件（可选）
-mkdir -p ~/.sk_config
-echo "your_jimeng_session_id" > ~/.sk_config/jimeng_sessionid
-```
+本项目使用即梦 AI 生成图片，需要获取 sessionid 用于 API 认证。
 
 > **如何获取即梦 sessionid？**
 >
-> 本工具通过即梦 API 生成图片，需要先部署即梦 API 代理服务（MCP 服务），然后获取 sessionid 作为认证凭证。
->
-> **方案一：部署即梦 MCP 服务（推荐）**
-> ```
-> 1. 使用官方即梦 MCP 部署脚本启动服务
-> 2. 服务启动后会在控制台输出 Bearer token（即 sessionid）
-> 3. 或者在请求头中查看：curl 即梦API地址 -H "Authorization: Bearer xxx"
-> ```
->
-> **方案二：使用已有的即梦服务**
-> ```
-> 1. 如果已有即梦 MCP 服务在运行，sessionid 就是 HTTP 请求头中的 Bearer token
-> 2. 示例：curl -s 即梦API地址 \
->       -H "Authorization: Bearer 你的sessionid" \
->       -H "Content-Type: application/json"
-> ```
->
-> **方案三：使用其他兼容的 AI 图片生成 API**
-> ```
-> 只要能提供兼容的 HTTP API（POST /v1/chat/completions），
-> 也可以接入其他图片生成服务，只需修改 JIMENG_URL 环境变量。
-> ```
+> 1. 在浏览器中打开并登录 **即梦 AI** 网站
+> 2. 按 **F12** 打开开发者工具
+> 3. 切换到 **Network（网络）** 标签页
+> 4. 刷新页面，找到任一请求即梦 API 的请求
+> 5. 在请求头（Request Headers）中找到 **Authorization** 字段
+> 6. 复制 **Bearer xxx** 中的 **xxx** 部分（即 sessionid）
+
+**桌面版配置**：安装后打开应用 → 点击「⚙️ 设置」→ 粘贴 sessionid → 保存
+
+**命令行/服务器配置**：
+
+```bash
+export JIMENG_SESSIONID=your_jimeng_session_id
+export JIMENG_URL=http://localhost:8001/v1/chat/completions
+```
+
+> 也可以将 sessionid 写入配置文件 `~/.sk_config/jimeng_sessionid`，或使用其他兼容的图片生成 API。
 
 ### 3. 本地开发
 

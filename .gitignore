@@ -8,6 +8,10 @@ yarn-error.log*
 client/dist/
 server/dist/
 **/*.tsbuildinfo
+release/
+
+# === Electron ===
+node_modules/
 
 # === Data files (SQLite databases) ===
 data/
@@ -20,9 +24,8 @@ data/
 .env
 .env.local
 .env.*.local
-jimeng_sessionid
-**/jimeng_sessionid
 .sk_config/
+.ai-art-classroom/
 
 # === OS ===
 .DS_Store

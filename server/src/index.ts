@@ -5,6 +5,7 @@ import fs from 'fs';
 import { initDB } from './db';
 import { studentsRouter } from './routes/students';
 import { imagesRouter } from './routes/images';
+import { configRouter } from './routes/config';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
@@ -16,6 +17,7 @@ app.use(express.json());
 // API 路由（必须放在静态文件之前，否则会被拦截）
 app.use(BASE, studentsRouter);
 app.use(BASE, imagesRouter);
+app.use(BASE, configRouter);
 
 // 健康检查
 app.get('/sk/api/health', (_req, res) => {
@@ -41,9 +43,12 @@ app.get('/sk/*', (_req, res) => {
 // 初始化数据库
 initDB();
 
-app.listen(PORT, () => {
-  console.log(`✏️ SK Server running at http://localhost:${PORT}`);
-  console.log(`📚 API base: http://localhost:${PORT}${BASE}`);
-});
+// 仅在非 Electron 环境下自动监听（Electron 主进程会手动调用）
+if (!process.env.ELECTRON_RUN) {
+  app.listen(PORT, () => {
+    console.log(`✏️ SK Server running at http://localhost:${PORT}`);
+    console.log(`📚 API base: http://localhost:${PORT}${BASE}`);
+  });
+}
 
 export default app;

@@ -79,6 +79,7 @@ export default function GroupSelectPage() {
       <div className="footer-links">
         <a href="#/ls" className="footer-link">👩‍🏫 教师端</a>
         <a href="#/gallery" className="footer-link">🖼️ 画廊</a>
+        <a href="#/settings" className="footer-link">⚙️ 设置</a>
       </div>
     </div>
   );

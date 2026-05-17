@@ -1,0 +1,27 @@
+appId: com.qianze.ai-art-classroom
+productName: "AI绘画小课堂"
+directories:
+  output: release
+files:
+  - electron/**/*
+  - server/dist/**/*
+  - server/node_modules/**/*
+  - server/package.json
+  - client/dist/**/*
+extraMetadata:
+  main: electron/main.js
+mac:
+  category: public.app-category.education
+  target:
+    - dmg
+  artifactName: "AI绘画小课堂-${version}-mac.${ext}"
+win:
+  target:
+    - nsis
+  artifactName: "AI绘画小课堂-${version}-win.${ext}"
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  language: "2052"
+asar: false

@@ -14,18 +14,26 @@ function getSessionId(): string {
   const configPaths = [
     '/root/.sk_config/jimeng_sessionid',
     '/home/ubuntu/.sk_config/jimeng_sessionid',
-    path.join(process.env.HOME || '', '.sk_config/jimeng_sessionid')
+    path.join(process.env.HOME || '', '.sk_config/jimeng_sessionid'),
+    // Electron 桌面版配置（从浏览器 F12 获取后保存）
+    path.join(process.env.HOME || '', '.ai-art-classroom/config.json'),
   ];
 
   for (const p of configPaths) {
     try {
       if (fs.existsSync(p)) {
-        return fs.readFileSync(p, 'utf-8').trim();
+        // .json 文件是结构化配置
+        if (p.endsWith('.json')) {
+          const config = JSON.parse(fs.readFileSync(p, 'utf-8'));
+          if (config.jimeng_sessionid) return config.jimeng_sessionid;
+        } else {
+          return fs.readFileSync(p, 'utf-8').trim();
+        }
       }
     } catch {}
   }
 
-  throw new Error('无法读取即梦 sessionid，请设置 JIMENG_SESSIONID 环境变量');
+  throw new Error('无法读取即梦 sessionid，请在设置页面配置或设置 JIMENG_SESSIONID 环境变量');
 }
 
 /**

@@ -1,5 +1,10 @@
+/**
+ * 数据库管理 - 使用 better-sqlite3
+ * 在 Electron 环境中需要使用 @electron/rebuild 编译原生模块
+ */
 import Database from 'better-sqlite3';
 import path from 'path';
+import fs from 'fs';
 
 const DB_PATH = path.join(__dirname, '../../data/sk.db');
 
@@ -7,7 +12,6 @@ let db: Database.Database;
 
 export function getDB(): Database.Database {
   if (!db) {
-    const fs = require('fs');
     const dir = path.dirname(DB_PATH);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
@@ -28,20 +32,12 @@ export function initDB(): void {
       name TEXT NOT NULL
     );
 
-    CREATE TABLE IF NOT EXISTS classes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
-    );
-
     CREATE TABLE IF NOT EXISTS students (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       group_id INTEGER NOT NULL,
-      class_id INTEGER,
       created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-      FOREIGN KEY (group_id) REFERENCES groups(id),
-      FOREIGN KEY (class_id) REFERENCES classes(id)
+      FOREIGN KEY (group_id) REFERENCES groups(id)
     );
 
     CREATE TABLE IF NOT EXISTS images (
@@ -61,8 +57,6 @@ export function initDB(): void {
     CREATE TABLE IF NOT EXISTS archives (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
-      class_id INTEGER,
-      class_name TEXT,
       archive_date TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
     );
@@ -78,12 +72,6 @@ export function initDB(): void {
       image_url TEXT NOT NULL,
       created_at TEXT NOT NULL,
       FOREIGN KEY (archive_id) REFERENCES archives(id)
-    );
-
-    CREATE TABLE IF NOT EXISTS settings (
-      key TEXT PRIMARY KEY,
-      value TEXT NOT NULL,
-      updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
     );
   `);
 
@@ -105,9 +93,8 @@ export function clearAllData(): void {
   d.exec('DELETE FROM archives');
   d.exec('DELETE FROM images');
   d.exec('DELETE FROM students');
-  d.exec('DELETE FROM classes');
+  // 重新插入默认 8 组
   d.exec('DELETE FROM groups');
-  // 重新插入默认8组
   const insert = d.prepare('INSERT INTO groups (id, name) VALUES (?, ?)');
   for (let i = 1; i <= 8; i++) {
     insert.run(i, `第${i}组`);
