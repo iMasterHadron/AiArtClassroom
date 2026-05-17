@@ -8,16 +8,19 @@ const path = require('path');
 const fs = require('fs');
 const { loadConfig, saveConfig } = require('./store');
 
+const APP_VERSION = require('../package.json').version;
+
 // 错误日志写入文件
 const LOG_PATH = path.join(app.getPath('home'), '.ai-art-classroom', 'app.log');
 function log(msg) {
   try {
     const dir = path.dirname(LOG_PATH);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.appendFileSync(LOG_PATH, `[${new Date().toISOString()}] ${msg}\n`);
+    fs.appendFileSync(LOG_PATH, `[${new Date().toISOString()}] [v${APP_VERSION}] ${msg}\n`);
   } catch(e) {}
 }
 log('=== App started ===');
+log('version: ' + APP_VERSION);
 log('__dirname: ' + __dirname);
 log('cwd: ' + process.cwd());
 
@@ -81,7 +84,7 @@ function createWindow() {
     height: 800,
     minWidth: 900,
     minHeight: 600,
-    title: 'AI 绘画小课堂',
+    title: `AI 绘画小课堂 v${APP_VERSION}`,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
